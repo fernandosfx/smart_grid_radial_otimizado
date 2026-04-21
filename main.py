@@ -7,9 +7,9 @@ import pulp
 import numpy as np
 
 # Carregar os scripts modularizados
-exec(open("A_definicao_parametros.py").read(), globals())
-exec(open("B_condicoes_modelo.py").read(), globals())
-exec(open("C_aproximacao_perdas.py").read(), globals())
+exec(open("otimizacao/A_definicao_parametros.py").read(), globals())
+exec(open("otimizacao/B_condicoes_modelo.py").read(), globals())
+exec(open("otimizacao/C_aproximacao_perdas.py").read(), globals())
 
 
 # ============================================================
@@ -168,29 +168,85 @@ def calcular_custo_total(prob):
     return pulp.value(prob.objective)
 
 
-def exibir_resumo_solucao(prob, N, T, B):
+def salvar_resultados_csv(prob, PS, PW, CS, CW, P_ch, P_dis, E, F, Ploss, theta, N, T, B, L, arquivo_csv="variaveis_otimizadas/variaveis_otimizadas.csv"):
     """
-    Exibe um resumo da solução encontrada.
+    Salva todos os resultados da otimização em um arquivo CSV.
     
     Args:
-        prob (pulp.LpProblem): Problema de otimização
-        N (list): Conjunto de barras
-        T (range): Horizonte temporal
-        B (set): Conjunto de baterias
+        prob: Problema de otimização
+        PS, PW, CS, CW: Variáveis de geração renovável
+        P_ch, P_dis, E: Variáveis de bateria
+        F, Ploss: Variáveis de fluxo e perdas
+        theta: Variável de ângulo
+        N, T, B, L: Conjuntos
+        arquivo_csv: Nome do arquivo de saída
     """
-    status = prob.status
-    status_msg = "Ótima" if status == 1 else ("Infeasível" if status == -1 else "Unbounded")
+    import pandas as pd
     
-    print("\n" + "="*60)
-    print("RESUMO DA SOLUÇÃO")
-    print("="*60)
-    print(f"Status: {status_msg}")
-    print(f"Custo Total: R$ {calcular_custo_total(prob):,.2f}")
-    print(f"Número de barras: {len(N)}")
-    print(f"Número de baterias: {len(B)}")
-    print(f"Períodos de tempo: {len(list(T))}")
-    print("="*60 + "\n")
-
+    # Lista para armazenar todas as linhas do CSV
+    dados = []
+    
+    # Adicionar informações gerais
+    custo_total = calcular_custo_total(prob)
+    dados.append({"tempo": "INFO", "entidade": "GERAL", "variavel": "custo_total", "valor": custo_total})
+    dados.append({"tempo": "INFO", "entidade": "GERAL", "variavel": "num_barras", "valor": len(N)})
+    dados.append({"tempo": "INFO", "entidade": "GERAL", "variavel": "num_baterias", "valor": len(B)})
+    dados.append({"tempo": "INFO", "entidade": "GERAL", "variavel": "periodos_tempo", "valor": len(list(T))})
+    
+    # Geração solar
+    for i in N:
+        for t in T:
+            dados.append({"tempo": t, "entidade": f"barra_{i}", "variavel": "PS", "valor": pulp.value(PS[(i, t)])})
+    
+    # Geração eólica
+    for i in N:
+        for t in T:
+            dados.append({"tempo": t, "entidade": f"barra_{i}", "variavel": "PW", "valor": pulp.value(PW[(i, t)])})
+    
+    # Curtailment solar
+    for i in N:
+        for t in T:
+            dados.append({"tempo": t, "entidade": f"barra_{i}", "variavel": "CS", "valor": pulp.value(CS[(i, t)])})
+    
+    # Curtailment eólico
+    for i in N:
+        for t in T:
+            dados.append({"tempo": t, "entidade": f"barra_{i}", "variavel": "CW", "valor": pulp.value(CW[(i, t)])})
+    
+    # Carga de bateria
+    for i in B:
+        for t in T:
+            dados.append({"tempo": t, "entidade": f"bateria_{i}", "variavel": "P_ch", "valor": pulp.value(P_ch[(i, t)])})
+    
+    # Descarga de bateria
+    for i in B:
+        for t in T:
+            dados.append({"tempo": t, "entidade": f"bateria_{i}", "variavel": "P_dis", "valor": pulp.value(P_dis[(i, t)])})
+    
+    # Estado de carga da bateria
+    for i in B:
+        for t in T:
+            dados.append({"tempo": t, "entidade": f"bateria_{i}", "variavel": "E", "valor": pulp.value(E[(i, t)])})
+    
+    # Fluxo nas linhas
+    for (i, j) in L:
+        for t in T:
+            dados.append({"tempo": t, "entidade": f"linha_{i}-{j}", "variavel": "F", "valor": pulp.value(F[((i, j), t)])})
+    
+    # Perdas nas linhas
+    for (i, j) in L:
+        for t in T:
+            dados.append({"tempo": t, "entidade": f"linha_{i}-{j}", "variavel": "Ploss", "valor": pulp.value(Ploss[((i, j), t)])})
+    
+    # Ângulos de tensão
+    for i in N:
+        for t in T:
+            dados.append({"tempo": t, "entidade": f"barra_{i}", "variavel": "theta", "valor": pulp.value(theta[(i, t)])})
+    
+    # Criar DataFrame e salvar
+    df_resultados = pd.DataFrame(dados)
+    df_resultados.to_csv(arquivo_csv, index=False)
+    print(f"Resultados salvos em {arquivo_csv}")
 
 # ============================================================
 # EXECUÇÃO PRINCIPAL
@@ -200,14 +256,9 @@ if __name__ == "__main__":
     # Resolver o modelo
     status = resolver_modelo(prob)
     
-    # Exibir resumo
-    exibir_resumo_solucao(prob, N, T, B)
+    # Salvar resultados em CSV
+    salvar_resultados_csv(prob, PS, PW, CS, CW, P_ch, P_dis, E, F, Ploss, theta, N, T, B, L)
     
-    # Extrair resultados
-    df_PS, df_PW, df_CS, df_CW = extrair_resultados_geracao(PS, PW, CS, CW, N, T)
-    df_P_ch, df_P_dis, df_E = extrair_resultados_bateria(P_ch, P_dis, E, B, T)
-    df_F, df_Ploss = extrair_resultados_fluxo(F, Ploss, L, T)
-    df_theta = extrair_resultados_tensao(theta, N, T)
-    
-    print("Modelo resolvido com sucesso!")
-    print(f"Custo Total: R$ {calcular_custo_total(prob):,.2f}")
+    exec(open("variaveis_otimizadas/otimo_viz.py").read(), globals())
+
+    print("Modelo resolvido e resultados salvos com sucesso!")

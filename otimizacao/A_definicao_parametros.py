@@ -250,7 +250,7 @@ def definir_barra_referencia(N):
 # ============================================================
 
 # Carregar dados do CSV
-arquivo_csv = "dados_microrrede.csv"
+arquivo_csv = "./conjuntos_instancias/dados_microrrede.csv"
 df = carregar_dados(arquivo_csv)
 
 # Definir horizonte
