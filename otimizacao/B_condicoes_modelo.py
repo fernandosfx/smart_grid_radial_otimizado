@@ -2,6 +2,8 @@
 # MODULARIZAÇÃO: Funções para construção do modelo PuLP
 # ============================================================
 
+import pulp
+
 def criar_modelo(nome="Despacho_Economico_Microrrede"):
     """
     Cria um novo problema de otimização linear no PuLP.
@@ -254,28 +256,28 @@ def adicionar_restricoes_balanço_potencia(prob, N, T, PS, PW, P_dis, P_ch, B, D
 # ============================================================
 
 # Criar problema de minimização
-prob = criar_modelo()
+# prob = criar_modelo()
 
 # Criar variáveis de decisão
-PS, PW, CS, CW = criar_variaveis_renovaveis(N, T)
-P_ch, P_dis, E = criar_variaveis_bateria(B, T)
-theta, F, F_pos, F_neg, Ploss, lam = criar_variaveis_fluxo(N, L, T, K)
+#PS, PW, CS, CW = criar_variaveis_renovaveis(N, T)
+#P_ch, P_dis, E = criar_variaveis_bateria(B, T)
+#theta, F, F_pos, F_neg, Ploss, lam = criar_variaveis_fluxo(N, L, T, K)
 
 # Definir função objetivo
-definir_funcao_objetivo(prob, c_curt, CS, CW, N, T, c_ch, P_ch, c_dis, P_dis, B, c_loss, Ploss, L)
+#definir_funcao_objetivo(prob, c_curt, CS, CW, N, T, c_ch, P_ch, c_dis, P_dis, B, c_loss, Ploss, L)
 
 # Adicionar restrições de geração renovável
-adicionar_restricoes_renovaveis(prob, PS, CS, PS_avail, PW, CW, PW_avail, T, GS, GW)
+#adicionar_restricoes_renovaveis(prob, PS, CS, PS_avail, PW, CW, PW_avail, T, GS, GW)
 
 # Adicionar restrições de bateria
-adicionar_restricoes_bateria(prob, B, T, E, E0, P_ch, P_ch_max, P_dis, P_dis_max, E_min, E_max, eta_ch, eta_dis, Delta_t)
+#adicionar_restricoes_bateria(prob, B, T, E, E0, P_ch, P_ch_max, P_dis, P_dis_max, E_min, E_max, eta_ch, eta_dis, Delta_t)
 
 # Adicionar restrições de fluxo
-adicionar_restricoes_fluxo(prob, theta, F, F_max, N, T, i_ref, b, L)
+#adicionar_restricoes_fluxo(prob, theta, F, F_max, N, T, i_ref, b, L)
 
 # Construir incidência
-delta_plus, delta_minus = construir_incidencia(N, L)
+#delta_plus, delta_minus = construir_incidencia(N, L)
 
 # Adicionar restrições de balanço de potência
-adicionar_restricoes_balanço_potencia(prob, N, T, PS, PW, P_dis, P_ch, B, D, F, delta_plus, delta_minus, Ploss)
+#adicionar_restricoes_balanço_potencia(prob, N, T, PS, PW, P_dis, P_ch, B, D, F, delta_plus, delta_minus, Ploss)
 

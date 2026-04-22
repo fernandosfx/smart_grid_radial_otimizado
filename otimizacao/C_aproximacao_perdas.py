@@ -1,6 +1,7 @@
 # ============================================================
 # MODULARIZAÇÃO: Funções para aproximação piecewise de perdas
 # ============================================================
+import pulp
 
 def adicionar_decomposicao_fluxo(prob, L, T, F, F_pos, F_neg):
     """
@@ -86,13 +87,13 @@ def adicionar_aproximacao_perdas(prob, L, T, K, Ploss, p, lam):
 # ============================================================
 
 # Decomposição de fluxo
-adicionar_decomposicao_fluxo(prob, L, T, F, F_pos, F_neg)
+#adicionar_decomposicao_fluxo(prob, L, T, F, F_pos, F_neg)
 
 # Combinação convexa para módulo do fluxo
-adicionar_combinacao_convexa(prob, L, T, K, F_pos, F_neg, f, lam)
+#adicionar_combinacao_convexa(prob, L, T, K, F_pos, F_neg, f, lam)
 
 # Convexidade das lambdas (SOS1)
-adicionar_convexidade_lambdas(prob, L, T, K, lam)
+#adicionar_convexidade_lambdas(prob, L, T, K, lam)
 
 # Aproximação das perdas
-adicionar_aproximacao_perdas(prob, L, T, K, Ploss, p, lam)
+#adicionar_aproximacao_perdas(prob, L, T, K, Ploss, p, lam)

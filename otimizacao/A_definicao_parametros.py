@@ -2,6 +2,9 @@
 # MODULARIZAÇÃO DA DEFINIÇÃO DE PARÂMETROS
 # ============================================================
 
+import pandas as pd
+import numpy as np
+
 def carregar_dados(arquivo_csv):
     """
     Carrega o arquivo CSV e realiza padronização básica.
@@ -245,39 +248,126 @@ def definir_barra_referencia(N):
     """
     return min(N)
 
+def definir_parametros_microrrede(caminho_csv):
+    """
+    Carrega e define todos os parâmetros da microrrede a partir de um arquivo CSV.
+    
+    Args:
+        caminho_csv (str): Caminho para o arquivo CSV com dados da microrrede
+        
+    Returns:
+        dict: Dicionário contendo todos os parâmetros:
+            - T, Delta_t, N, GS, GW, B, L
+            - F_max, b, R, c_loss
+            - D, PS_avail, PW_avail, c_curt
+            - eta_ch, eta_dis, P_ch_max, P_dis_max, E_min, E_max, E0, c_ch, c_dis
+            - K, f, p
+            - i_ref
+    """
+    # Carregar dados do CSV
+    df = carregar_dados(caminho_csv)
+    
+    # Definir horizonte
+    T, Delta_t = definir_horizonte()
+    
+    # Extrair conjuntos e parâmetros
+    N = extrair_barras(df, T)
+    GS, GW, B = extrair_ativos(df)
+    L, F_max, b, R, c_loss = extrair_linhas(df)
+    D = extrair_demanda(df, N, T)
+    PS_avail, PW_avail = extrair_disponibilidade_renovavel(df, N, T)
+    c_curt = extrair_custo_curtimento(df, N)
+    
+    # Extrair parâmetros de bateria
+    bat_params = extrair_parametros_bateria(df, B)
+    eta_ch = bat_params["eta_ch"]
+    eta_dis = bat_params["eta_dis"]
+    P_ch_max = bat_params["P_ch_max"]
+    P_dis_max = bat_params["P_dis_max"]
+    E_min = bat_params["E_min"]
+    E_max = bat_params["E_max"]
+    E0 = bat_params["E0"]
+    c_ch = bat_params["c_ch"]
+    c_dis = bat_params["c_dis"]
+    
+    # Aproximação de perdas
+    K, f, p = calcular_aproximacao_perdas(L, F_max, R, Kmax=4)
+    
+    # Barra de referência
+    i_ref = definir_barra_referencia(N)
+    
+    # Retornar todos os parâmetros em um dicionário
+    return {
+        "T": T,
+        "Delta_t": Delta_t,
+        "N": N,
+        "GS": GS,
+        "GW": GW,
+        "B": B,
+        "L": L,
+        "F_max": F_max,
+        "b": b,
+        "R": R,
+        "c_loss": c_loss,
+        "D": D,
+        "PS_avail": PS_avail,
+        "PW_avail": PW_avail,
+        "c_curt": c_curt,
+        "eta_ch": eta_ch,
+        "eta_dis": eta_dis,
+        "P_ch_max": P_ch_max,
+        "P_dis_max": P_dis_max,
+        "E_min": E_min,
+        "E_max": E_max,
+        "E0": E0,
+        "c_ch": c_ch,
+        "c_dis": c_dis,
+        "K": K,
+        "f": f,
+        "p": p,
+        "i_ref": i_ref
+    }
+
+
 # ============================================================
-# CARREGAMENTO E INICIALIZAÇÃO DOS DADOS
+# CARREGAMENTO E INICIALIZAÇÃO DOS DADOS (COMPATIBILIDADE)
 # ============================================================
-
-# Carregar dados do CSV
-arquivo_csv = "./conjuntos_instancias/dados_microrrede.csv"
-df = carregar_dados(arquivo_csv)
-
-# Definir horizonte
-T, Delta_t = definir_horizonte()
-
-# Extrair conjuntos e parâmetros
-N = extrair_barras(df, T)
-GS, GW, B = extrair_ativos(df)
-L, F_max, b, R, c_loss = extrair_linhas(df)
-D = extrair_demanda(df, N, T)
-PS_avail, PW_avail = extrair_disponibilidade_renovavel(df, N, T)
-c_curt = extrair_custo_curtimento(df, N)
-
-# Extrair parâmetros de bateria
-bat_params = extrair_parametros_bateria(df, B)
-eta_ch = bat_params["eta_ch"]
-eta_dis = bat_params["eta_dis"]
-P_ch_max = bat_params["P_ch_max"]
-P_dis_max = bat_params["P_dis_max"]
-E_min = bat_params["E_min"]
-E_max = bat_params["E_max"]
-E0 = bat_params["E0"]
-c_ch = bat_params["c_ch"]
-c_dis = bat_params["c_dis"]
-
-# Aproximação de perdas
-K, f, p = calcular_aproximacao_perdas(L, F_max, R, Kmax=4)
-
-# Barra de referência
-i_ref = definir_barra_referencia(N)
+# Carregamento automático com arquivo padrão (compatibilidade com exec())
+# Este bloco sempre executa quando o arquivo é carregado
+try:
+    arquivo_csv = "./conjuntos_instancias/dados_microrrede_0.csv"
+    parametros = definir_parametros_microrrede(arquivo_csv)
+    
+    # Desempacotar no escopo global para compatibilidade
+    T = parametros["T"]
+    Delta_t = parametros["Delta_t"]
+    N = parametros["N"]
+    GS = parametros["GS"]
+    GW = parametros["GW"]
+    B = parametros["B"]
+    L = parametros["L"]
+    F_max = parametros["F_max"]
+    b = parametros["b"]
+    R = parametros["R"]
+    c_loss = parametros["c_loss"]
+    D = parametros["D"]
+    PS_avail = parametros["PS_avail"]
+    PW_avail = parametros["PW_avail"]
+    c_curt = parametros["c_curt"]
+    eta_ch = parametros["eta_ch"]
+    eta_dis = parametros["eta_dis"]
+    P_ch_max = parametros["P_ch_max"]
+    P_dis_max = parametros["P_dis_max"]
+    E_min = parametros["E_min"]
+    E_max = parametros["E_max"]
+    E0 = parametros["E0"]
+    c_ch = parametros["c_ch"]
+    c_dis = parametros["c_dis"]
+    K = parametros["K"]
+    f = parametros["f"]
+    p = parametros["p"]
+    i_ref = parametros["i_ref"]
+except FileNotFoundError:
+    # Se arquivo padrão não existir, apenas deixa a função disponível
+    # (isso permite que o módulo seja importado sem erro)
+    pass
