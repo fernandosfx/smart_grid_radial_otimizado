@@ -106,7 +106,7 @@ def definir_funcao_objetivo(prob, c_curt, CS, CW, N, T, c_ch, P_ch, c_dis, P_dis
         )
     ), "Custo_Total"
 
-def adicionar_restricoes_renovaveis(prob, PS, CS, PS_avail, PW, CW, PW_avail, T, GS, GW):
+def adicionar_restricoes_renovaveis(prob, PS, CS, PS_avail, PW, CW, PW_avail, T, GS, GW, N):
     """
     Adiciona as restrições de geração solar e eólica (curtimento).
     
@@ -118,7 +118,18 @@ def adicionar_restricoes_renovaveis(prob, PS, CS, PS_avail, PW, CW, PW_avail, T,
         PW_avail: Disponibilidade eólica
         T (range): Horizonte temporal
         GS, GW: Conjuntos de geradores solar e eólico
+        N (list): Conjunto de barras
     """
+    # Restrições para barras sem geração renovável (PS = PW = 0)
+    for t in T:
+        for i in N:
+            if i not in GS and i not in GW:
+                prob += PS[(i, t)] <= 0
+                prob += PW[(i, t)] <= 0
+                prob += CS[(i, t)] <= 0
+                prob += CW[(i, t)] <= 0
+            
+    
     # Restrições de geração solar
     for t in T:
         for i in GS:
@@ -244,7 +255,7 @@ def adicionar_restricoes_balanço_potencia(prob, N, T, PS, PW, P_dis, P_ch, B, D
             
             # Perdas nas linhas incidentes
             incident_lines = delta_plus[i] + delta_minus[i]
-            sum_loss = pulp.lpSum(Ploss[((l_i, l_j), t)] for (l_i, l_j) in incident_lines)
+            sum_loss = 0.5*pulp.lpSum(Ploss[((l_i, l_j), t)] for (l_i, l_j) in incident_lines)      # Ajuste para evitar contagem dupla
             
             prob += (
                 inj_ren + inj_batt - D[(i, t)]
@@ -267,7 +278,7 @@ def adicionar_restricoes_balanço_potencia(prob, N, T, PS, PW, P_dis, P_ch, B, D
 #definir_funcao_objetivo(prob, c_curt, CS, CW, N, T, c_ch, P_ch, c_dis, P_dis, B, c_loss, Ploss, L)
 
 # Adicionar restrições de geração renovável
-#adicionar_restricoes_renovaveis(prob, PS, CS, PS_avail, PW, CW, PW_avail, T, GS, GW)
+#adicionar_restricoes_renovaveis(prob, PS, CS, PS_avail, PW, CW, PW_avail, T, GS, GW, N)
 
 # Adicionar restrições de bateria
 #adicionar_restricoes_bateria(prob, B, T, E, E0, P_ch, P_ch_max, P_dis, P_dis_max, E_min, E_max, eta_ch, eta_dis, Delta_t)

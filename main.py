@@ -350,7 +350,7 @@ def executar_otimizacao(caminho_csv, pasta_saida_figuras="figuras_artigo", camin
     definir_funcao_objetivo(prob, c_curt, CS, CW, N, T, c_ch, P_ch, c_dis, P_dis, B, c_loss, Ploss, L)
 
     # Adicionar restrições de geração renovável
-    adicionar_restricoes_renovaveis(prob, PS, CS, PS_avail, PW, CW, PW_avail, T, GS, GW)
+    adicionar_restricoes_renovaveis(prob, PS, CS, PS_avail, PW, CW, PW_avail, T, GS, GW, N)
 
     # Adicionar restrições de bateria
     adicionar_restricoes_bateria(prob, B, T, E, E0, P_ch, P_ch_max, P_dis, P_dis_max, E_min, E_max, eta_ch, eta_dis, Delta_t)
