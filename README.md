@@ -274,7 +274,7 @@ jupyter notebook relatorio_multiplas_instancias.ipynb
 ```
 
 Execute as células do notebook em sequência. O notebook irá:
-- Carregar todas as 7 instâncias
+- Carregar todas as instâncias
 - Resolver o modelo de otimização para cada uma
 - Gerar figuras de visualização automática
 - Consolidar resultados em `variaveis_otimizadas/variaveis_otimizadas_consolidado.csv`
