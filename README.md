@@ -53,7 +53,7 @@ $$\sum_{k} \lambda_{k,l,t} = 1 \quad \forall l, t$$
 
 ### 3.1 Formato de Entrada (CSV)
 
-O arquivo **`dados_microrrede.csv`** contém todos os dados do modelo em formato tabular. Cada linha representa uma entidade ou parâmetro do sistema.
+O modelo suporta **múltiplas instâncias** de dados de microrrede, localizadas na pasta `conjuntos_instancias/`. Cada arquivo **`dados_microrrede_X.csv`** (onde X é o índice da instância, de 0 a 6) contém todos os dados do modelo em formato tabular. Cada linha representa uma entidade ou parâmetro do sistema.
 
 **Estrutura do CSV:**
 ```
@@ -163,7 +163,7 @@ $$P_S^{i,t} + P_W^{i,t} + \sum_{j} F_{(j,i),t}^{AC} - \sum_{j} F_{(i,j),t}^{AC} 
 
 ### 6.2 Fluxo DC nas Linhas
 
-$$F^{l,t} = \frac{b^l}{2\pi} (\theta^{i,t} - \theta^{j,t}) \quad \forall l = (i,j), t \in T$$
+$$F^{l,t} = b^l(\theta^{i,t} - \theta^{j,t}) \quad \forall l = (i,j), t \in T$$
 
 ### 6.3 Limite de Fluxo nas Linhas
 
@@ -180,10 +180,6 @@ $$E^{i,t} = E^{i,t-1} + \eta_{ch}^i P_{ch}^{i,t} - \frac{1}{\eta_{dis}^i} P_{dis
 $$E_{min}^i \leq E^{i,t} \leq E_{max}^i \quad \forall i \in B, t \in T$$
 
 ### 6.6 Complementaridade de Carga e Descarga
-
-$$P_{ch}^{i,t} \cdot P_{dis}^{i,t} = 0 \quad \forall i \in B, t \in T$$
-
-### 6.7 Aproximação Piecewise Linear de Perdas
 
 $$F^{l,t} = F_{pos}^{l,t} - F_{neg}^{l,t}$$
 
@@ -225,7 +221,22 @@ Orquestração:
 - Resolve o modelo
 - Extrai e exibe resultados
 
----
+### 7.5 **variaveis_otimizadas/otimo_viz.py**
+Módulo de visualização:
+- `gerar_figuras()`: Cria gráficos automáticos de operação da microrrede
+- Geração de figuras para análise de resultados
+
+### 7.6 **conjuntos_instancias/gerador_instancias.py**
+Geração de cenários:
+- Cria variações das instâncias base
+- Modifica disponibilidade de geração renovável
+- Gera os 7 cenários pré-configurados
+
+### 7.7 **relatorio_multiplas_instancias.ipynb**
+Notebook Jupyter para análise completa:
+- Execução automatizada de múltiplas instâncias
+- Geração de relatórios consolidados
+- Visualizações comparativas entre cenários
 
 ## 8. Como Usar
 
@@ -239,16 +250,41 @@ Editar `dados_microrrede.csv` com:
 
 ### 8.2 Execução
 
-```bash
-python main.py
+#### Opção 1: Otimização de uma Instância Específica (via Python)
+
+```python
+from main import executar_otimizacao
+
+# Executar otimização para uma instância específica
+resultado = executar_otimizacao(
+    caminho_csv="conjuntos_instancias/dados_microrrede_0.csv",
+    pasta_saida_figuras="figuras_artigo_0"
+)
+
+print(f"Status: {resultado['status']}")
+print(f"Custo Total: R$ {resultado['custo_total']:.2f}")
 ```
+
+#### Opção 2: Análise de Múltiplas Instâncias (via Jupyter Notebook)
+
+Para executar todas as instâncias e gerar relatórios consolidados:
+
+```bash
+jupyter notebook relatorio_multiplas_instancias.ipynb
+```
+
+Execute as células do notebook em sequência. O notebook irá:
+- Carregar todas as 7 instâncias
+- Resolver o modelo de otimização para cada uma
+- Gerar figuras de visualização automática
+- Consolidar resultados em `variaveis_otimizadas/variaveis_otimizadas_consolidado.csv`
 
 ### 8.3 Saída Esperada
 
 - **Status de resolução** (ótima, infeasível, unbounded)
 - **Valor da função objetivo** (custo total em R$)
-- **DataFrames com variáveis de decisão** (geração, armazenamento, fluxos)
-- **Gráficos** (opcional) de operação ao longo do horizonte
+- **DataFrames com variáveis de decisão** salvos em CSV na pasta `variaveis_otimizadas/`
+- **Gráficos automáticos** salvos nas pastas `figuras_artigo_X/` (onde X é o índice da instância)
 
 ---
 
@@ -258,12 +294,18 @@ python main.py
 - **pandas**: Manipulação de dados
 - **PuLP**: Modelagem de otimização
 - **numpy**: Operações numéricas
+- **matplotlib**: Geração de gráficos
+- **seaborn**: Visualizações estatísticas
+- **tqdm**: Barras de progresso
+- **jupyter**: Para execução do notebook (opcional)
 - **Solver**: CBC (Coin-or-Branch-and-Cut) - geralmente incluído com PuLP
 
 **Instalação:**
 ```bash
-pip install pulp pandas numpy
+pip install pulp pandas numpy matplotlib seaborn tqdm jupyter
 ```
+
+**Nota:** Para usar o notebook `relatorio_multiplas_instancias.ipynb`, certifique-se de que o Jupyter está instalado (incluído no comando acima).
 
 ---
 
@@ -277,9 +319,11 @@ pip install pulp pandas numpy
 
 ---
 
-## Autores e Referências
+
 
 Desenvolvido para disciplina **PO201** do Mestrado em Pesquisa Operacional no Instituto Tecnológico de Aeronáutica.
+
+## 11. Autores e Referências
 
 **Referências:**
 - Hart, W. E., et al. (2017). "Pyomo – Optimization Modeling in Python"

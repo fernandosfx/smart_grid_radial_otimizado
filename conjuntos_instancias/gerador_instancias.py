@@ -52,8 +52,9 @@ def instancia_2(base):
 # -------------------------------------------------------
 def instancia_3(base):
     df = base.copy()
-    mask_bat = df["tipo"] == "BATERIA"
-    df = df[~mask_bat]  # Remove todas as linhas onde tipo == "BATERIA"
+    mask_bat = (df["tipo"] == "BATERIA") | (df["ativo"] == "bateria")
+    df = df.drop(df[mask_bat].index)
+    df = df.reset_index(drop=True)  # Opcional: reseta índices
     return df
 
 
